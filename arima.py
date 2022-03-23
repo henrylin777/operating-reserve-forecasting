@@ -25,9 +25,8 @@ def load_data():
     df = data_orig[["日期", "備轉容量(MW)"]]
     df = change_col_name(df, "日期", "Date")
     df = change_col_name(df, "備轉容量(MW)", "OR")
-    # df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')  # convert date column to DateTime
-    # df.set_index('OR')
-    df = df[["OR"]]
+    df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')  # convert date column to DateTime
+    df.set_index('Date', inplace=True)
 
     
     return df
@@ -84,11 +83,11 @@ def method2(y):
     #方法二：网格搜索
     import itertools
     # 首先定义 p、d、q 的参数值范围，这里取 0 - 2.
-    p = d = q = range(0, 2)
+    p = d = q = range(0, 3)
 
     # 然后用itertools生成不同的参数组合
     pdq = list(itertools.product(p, d, q))
-
+    
     # 同理处理季节周期性参数，也生成相应的多个组合
     seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
 
@@ -97,6 +96,9 @@ def method2(y):
     print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[2]))
     print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[3]))
     print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[4]))
+    print(seasonal_pdq)
+    print(pdq)
+    exit()
     warnings.filterwarnings('ignore') 
     for param in pdq:
         for param_seasonal in seasonal_pdq:
@@ -145,7 +147,7 @@ def train(y):
 
 
 def predict(results, date_start):
-    pred = results.get_prediction(start=400, dynamic=False)
+    pred = results.get_prediction(start=date_start, dynamic=False)
     pred_ci = pred.conf_int()
     
     return pred, pred_ci
@@ -155,14 +157,18 @@ def predict(results, date_start):
 def main():
 
     df = load_data()
+    print(df)
+    
+    
     TestStationaryAdfuller(df)
     
     y_seasonal_diff = deviate(df)
+    
     TestStationaryAdfuller(y_seasonal_diff.dropna(inplace=False))
     
-    # method2(df)
+    method2(df)
+    exit()
     
-
     # ============= start training =============
     results = train(df)
     
