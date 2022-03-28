@@ -2,12 +2,7 @@ import warnings
 import numpy as np, pandas as pd
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import matplotlib.pyplot as plt
-
 import statsmodels.api as sm
-
-
-
-
 
 
 def load_old_data(file_name):
@@ -20,8 +15,6 @@ def load_old_data(file_name):
     df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d')  # convert date column to DateTime
     # print( df['Date'][2]) 
     df.set_index('Date', inplace=True)
-
-    
     return df
 
 
@@ -92,19 +85,20 @@ class SARIMA():
         return y_seasonal_diff
 
 
-    def method2(self, y):
+    def method2(self, y, seasonal_param=12):
         '''
         Use grid method to find out the best q, d, p
         '''
         import itertools
-        # 首先定义 p、d、q 的参数值范围，这里取 0 - 2.
+
+        # define p, d, q in range 0 ~ 2.
         p = d = q = range(0, 3)
 
-        # 然后用itertools生成不同的参数组合
+        # use itertools to generate all combination results
         pdq = list(itertools.product(p, d, q))
         
         # 同理处理季节周期性参数，也生成相应的多个组合
-        seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
+        seasonal_pdq = [(x[0], x[1], x[2], seasonal_param) for x in list(itertools.product(p, d, q))]
 
         print('Examples of parameter combinations for Seasonal ARIMA...')
         print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[1]))
@@ -119,13 +113,13 @@ class SARIMA():
                     mod = sm.tsa.statespace.SARIMAX(y, order=param, seasonal_order=param_seasonal, enforce_stationarity=False,
                                                     enforce_invertibility=False)
                     results = mod.fit()
-                    print('SARIMAX{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
+                    # print('SARIMAX{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
                 except:
                     continue
 
 
-    def white_noise(self, y_seasonal_diff):
-        #再对1阶12步差分后序列做白噪声检验
+    def white_noise_test(self, y_seasonal_diff):
+
         warnings.filterwarnings('ignore') 
         y_seasonal_diff.dropna(inplace = True)
         r,q,p = sm.tsa.acf(y_seasonal_diff.values.squeeze(), qstat=True) 
@@ -138,22 +132,28 @@ class SARIMA():
 
 
     def train(self, y):
+
+        # y = self.load_data(training_data)
         mod = sm.tsa.statespace.SARIMAX(y,
-                                    order=(1, 1, 1),
-                                    seasonal_order=(1, 1, 1, 12),
+                                    order=(2, 2, 2),
+                                    seasonal_order=(2, 2, 2, 6),
                                     enforce_stationarity=False,
                                     enforce_invertibility=False)
 
         results = mod.fit()
         print(results.summary().tables[1])
         # results.plot_diagnostics(figsize=(12, 10))
+        # self.results = results
         return results
 
 
-    def validate(self, results, date_start):
+    def validate(self, df, results, date_start="2022-01-01"):
+
         pred = results.get_prediction(start=date_start, dynamic=False)
         pred_ci = pred.conf_int()
-        return pred, pred_ci
+        rmse_error = self.calculate_rmse_error(df, pred, date_start)
+
+        return pred, pred_ci, rmse_error
         
 
     def calculate_rmse_error(self, y, pred, start_time):
@@ -161,10 +161,13 @@ class SARIMA():
         y_truth = y[start_time:]
         y_truth = y_truth.squeeze()
         
-        mse = ((y_forecasted - y_truth) ** 2).mean()
+        # mse = ((y_forecasted - y_truth) ** 2).mean()
         # print('The Mean Squared Error of forecasts is {}'.format(round(mse, 2)))
-        print('The Root Mean Squared Error of forecasts is {}'.format(np.sqrt(sum((y_forecasted-y_truth)**2)/len(y_forecasted))))
-        return
+
+        rmse_error = np.sqrt(sum((y_forecasted-y_truth)**2)/len(y_forecasted))
+        print('The Root Mean Squared Error of forecasts is {}'.format(rmse_error))
+
+        return rmse_error
 
 
     def predict(self, results, date_start):
@@ -175,11 +178,9 @@ class SARIMA():
         return pred
 
 
-    def make_figure(self, df):
+    def make_figure(self, df, pred, pred_ci):
         ax = df.plot(label='Original')
-        
         pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.7)
-
         ax.fill_between(pred_ci.index,
                         pred_ci.iloc[:, 0],
                         pred_ci.iloc[:, 1], color='k', alpha=.2)
@@ -197,36 +198,32 @@ class SARIMA():
         df = self.load_data(training_data)
         # df = pd.concat([df1, df2], axis=0)
 
-        self.TestStationaryAdfuller(df)      
-        y_seasonal_diff = self.deviate(df)
-        self.TestStationaryAdfuller(y_seasonal_diff.dropna(inplace=False))
+        # ================ Check if data is stationary ================
+        # self.TestStationaryAdfuller(df)      
+        # y_seasonal_diff = self.deviate(df)
+        # self.TestStationaryAdfuller(y_seasonal_diff.dropna(inplace=False))
         
         # ========= Use grid method to find out the best q, d, p =========
-        # method2(df)
+        # self.method2(df,seasonal_param=6)
         
-        # ================== start training ==================
+        # ================== training ==================
         results = self.train(df)
         
         # ================== validate ==================
-        # start_time = "2022-01-01"
-        # pred, pred_ci = validate(results, start_time)
-        # calculate_rmse_error(df, pred, start_time)
-
+        pred, pred_ci, rmse_error = self.validate(df, results)
+        
         # ================== make prediction ==================
         
-        prediction_result  = self.predict(results, '2022-03-30')
+        # prediction_result  = self.predict(results, '2022-03-30')
         # exit()
         # print(pred.predicted_mean)
         
-        # ================== Make figures ==================
-        # make_figure(df)
+        # ================== Make figure ==================
+        self.make_figure(df, pred, pred_ci)
         
-        return prediction_result
-
-
-
-
+        return results
 
 
 if __name__ == "__main__":
-    arima_main("raw_data.csv")
+    model = SARIMA()
+    results = model.main("raw_data.csv")

@@ -35,8 +35,11 @@ if __name__ == "__main__":
     parser.add_argument('--output',
                         default='submission.csv',
                         help='output file name')
+
     args = parser.parse_args()
     model = SARIMA()
-    prediction_result = model.main(args.training)
+    df = model.load_data(args.training)
+    results = model.train(df)
+    prediction_result = model.predict(results, "2020-03-30")
     write_output(prediction_result, args.output)
 
