@@ -135,8 +135,8 @@ class SARIMA():
 
         # y = self.load_data(training_data)
         mod = sm.tsa.statespace.SARIMAX(y,
-                                    order=(2, 2, 2),
-                                    seasonal_order=(2, 2, 2, 6),
+                                    order=(1, 1, 1),
+                                    seasonal_order=(1, 1, 1, 48),
                                     enforce_stationarity=False,
                                     enforce_invertibility=False)
 
