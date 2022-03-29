@@ -3,7 +3,7 @@
 Operating-reserve load forecasting via Seasonal-ARIMA (SARIMA)
 
 這次的任務我選用 statistical-based model 來進行備轉容量(OR)預測而非 Deep Learning based model
-原因是因為 DL-based model 需要大量的訓練資料才能達到較佳的效果，考量到目前只有找到2021年~2022年3月的資料，其資料筆數大約為4百多筆，資料量顯然不夠。
+原因是因為 DL-based model 需要大量的訓練資料才能達到較佳的效果。考量到目前只有找到2020年~2022年3月的資料，其資料筆數大約為7百多筆，資料量顯然不夠，且經過實驗後發現，加入2020年的資料並沒有表現得比較好，所以最後training data只取 2021/01/01 到 2022/03/28。
 
 ### Usage
 
