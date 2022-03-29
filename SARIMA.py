@@ -5,20 +5,6 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
 
-def load_old_data(file_name):
-    
-    data_orig = pd.read_csv(file_name)
-    df = data_orig[["日期", "備轉容量(MW)"]]
-    df = change_col_name(df, "日期", "Date")
-    df = change_col_name(df, "備轉容量(MW)", "OR")
-    
-    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d')  # convert date column to DateTime
-    # print( df['Date'][2]) 
-    df.set_index('Date', inplace=True)
-    return df
-
-
-
 
 
 def change_col_name(data, old_name, new_name):
@@ -32,16 +18,11 @@ class SARIMA():
 
     def load_data(self, file_name):
         
-        data_orig = pd.read_csv(file_name)
-        
-        df = data_orig[["日期", "備轉容量(MW)"]]
-        df = change_col_name(df, "日期", "Date")
-        df = change_col_name(df, "備轉容量(MW)", "OR")
-        
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')  # convert date column to DateTime
+        df = pd.read_csv(file_name)
+        # df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')  # convert date column to DateTime
         # print( df['Date'][2]) 
         df.set_index('Date', inplace=True)
-        print(df['OR'])
+        # print(df['OR'])
         return df
 
 
