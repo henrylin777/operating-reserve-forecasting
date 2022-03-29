@@ -9,7 +9,7 @@ def write_output(df, output_file):
     base = datetime.date.fromisoformat('2022-03-30')
 
     date_list = []
-    for x in range(15):
+    for x in range(len(df)):
         date = base + datetime.timedelta(days=x) 
         date_list.append(date.strftime('%Y%m%d'))
 

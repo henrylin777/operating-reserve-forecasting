@@ -153,8 +153,10 @@ class SARIMA():
 
 
     def predict(self, results):
-        pred = results.forecast(steps=15, dynamic=False)
-        # print("pred: ", pred)
+        pred = results.forecast(steps=16, dynamic=False)
+        print("pred: ")
+        pred = pred[1:]
+        print(pred)
         # mask = (df['日期'] >= '2022-03-30') & (df['日期'] <= '2022-04-13')
         # print("pred[1]: ", pred[1])
         return pred

@@ -8,8 +8,10 @@ Operating-reserve load forecasting via Seasonal-ARIMA (SARIMA)
 ### Usage
 
 ```
-python3 app.py --training raw_data.csv --outout submission.csv 
+python3 app.py --training training_data.csv --output submission.csv 
 ```
+
+<br>
 
 ### SARIMA 
 
@@ -19,7 +21,9 @@ Autoregressive Integrated Moving Average(ARMA)是以Autoregressive model(AR)和M
 SARIMA的參數有 (p, q, d) x (P, Q, D, m)，我使用 grid method 搭配 Akaike Information Criterion (AIC)來找出最合適的參數，
 找到之後就可以使用模型來進行預測。
 
-#### training process
+<br>
+
+### training process
 
 1. 根據時間序列的散點圖、自我相關函數和偏自我相關函數圖識別其平穩性。
 2. 對非平穩的時間序列數據進行平穩化處理。直到處理後的自我相關函數和偏自我相關函數的數值非顯著非零。
