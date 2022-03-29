@@ -40,6 +40,6 @@ if __name__ == "__main__":
     model = SARIMA()
     df = model.load_data(args.training)
     results = model.train(df)
-    prediction_result = model.predict(results, "2020-03-30")
+    prediction_result = model.predict(results)
     write_output(prediction_result, args.output)
 

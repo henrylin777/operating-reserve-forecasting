@@ -33,6 +33,7 @@ class SARIMA():
     def load_data(self, file_name):
         
         data_orig = pd.read_csv(file_name)
+        
         df = data_orig[["日期", "備轉容量(MW)"]]
         df = change_col_name(df, "日期", "Date")
         df = change_col_name(df, "備轉容量(MW)", "OR")
@@ -40,7 +41,7 @@ class SARIMA():
         df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')  # convert date column to DateTime
         # print( df['Date'][2]) 
         df.set_index('Date', inplace=True)
-        
+        print(df['OR'])
         return df
 
 
@@ -71,9 +72,9 @@ class SARIMA():
         print(df_test_output)
 
         if df_test[1] <= cutoff:
-            print('拒绝原假设，即数据没有单位根,序列是平稳的。')
+            print('Reject H(0)，即数据没有单位根,序列是平稳的。')
         else:
-            print('不能拒绝原假设，即数据存在单位根,数据是非平稳序列。')
+            print('Can not reject H(0)，即数据存在单位根,数据是非平稳序列。')
             
             
     def deviate(self, df):
@@ -92,7 +93,7 @@ class SARIMA():
         import itertools
 
         # define p, d, q in range 0 ~ 2.
-        p = d = q = range(0, 3)
+        p = d = q = range(0, 2)
 
         # use itertools to generate all combination results
         pdq = list(itertools.product(p, d, q))
@@ -113,7 +114,7 @@ class SARIMA():
                     mod = sm.tsa.statespace.SARIMAX(y, order=param, seasonal_order=param_seasonal, enforce_stationarity=False,
                                                     enforce_invertibility=False)
                     results = mod.fit()
-                    # print('SARIMAX{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
+                    print('SARIMAX{}x{} - AIC:{}'.format(param, param_seasonal, results.aic))
                 except:
                     continue
 
@@ -136,7 +137,7 @@ class SARIMA():
         # y = self.load_data(training_data)
         mod = sm.tsa.statespace.SARIMAX(y,
                                     order=(1, 1, 1),
-                                    seasonal_order=(1, 1, 1, 48),
+                                    seasonal_order=(1, 1, 1, 12),
                                     enforce_stationarity=False,
                                     enforce_invertibility=False)
 
@@ -170,11 +171,11 @@ class SARIMA():
         return rmse_error
 
 
-    def predict(self, results, date_start):
-        pred = results.forecast(steps=15, dynamic=True)
-        print(pred)
+    def predict(self, results):
+        pred = results.forecast(steps=15, dynamic=False)
+        # print("pred: ", pred)
         # mask = (df['日期'] >= '2022-03-30') & (df['日期'] <= '2022-04-13')
-        print(pred[1])
+        # print("pred[1]: ", pred[1])
         return pred
 
 
@@ -205,7 +206,7 @@ class SARIMA():
         
         # ========= Use grid method to find out the best q, d, p =========
         # self.method2(df,seasonal_param=6)
-        
+        # exit()
         # ================== training ==================
         results = self.train(df)
         
